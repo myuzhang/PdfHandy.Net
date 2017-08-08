@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>PdfHandy.Net</id>
+    <version>$version$</version>
+    <title>Pdf Handy</title>
+    <authors>Michael Zhang</authors>
+    <owners>Michael Zhang</owners>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Fill text image u3d into acro form in pdf</description>
+    <releaseNotes>Initial Version</releaseNotes>
+    <copyright>Copyright 2017</copyright>
+    <tags>pdf</tags>
+  </metadata>
+</package>
