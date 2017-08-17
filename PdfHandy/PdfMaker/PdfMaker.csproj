@@ -86,6 +86,12 @@
     <Compile Include="U3DImageHelper.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Fonts\helveticaneueltstd-bd.otf">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="Fonts\helveticaneueltstd-lt.otf">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

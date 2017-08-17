@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using iText.Forms;
+﻿using iText.Forms;
 using iText.Forms.Fields;
 using iText.IO.Image;
 using iText.Kernel.Colors;
@@ -12,6 +7,12 @@ using iText.Kernel.Pdf;
 using iText.Layout;
 using iText.Layout.Element;
 using PdfMaker.Models;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Reflection;
 
 namespace PdfMaker
 {
@@ -30,6 +31,7 @@ namespace PdfMaker
         public PdfBuilder(string targetFile, string sourceFile)
         {
             Init(targetFile, sourceFile);
+            RegisterCustomFonts("Fonts");
         }
 
         public string SourceFile { get; private set; }
@@ -243,7 +245,7 @@ namespace PdfMaker
                             throw new ArgumentNullException(
                                 $"field widget annotation is not associated with any page");
                         int pageNum = _pdfDoc.GetPageNumber(page);
-                        
+
                         float width = (float)(position.GetAsNumber(2).GetValue() - position.GetAsNumber(0).GetValue());
                         float height = (float)(position.GetAsNumber(3).GetValue() - position.GetAsNumber(1).GetValue());
 
@@ -353,13 +355,33 @@ namespace PdfMaker
 
         public void RegisterCustomFont(string fontFile) => PdfFontFactory.Register(fontFile);
 
+        public void RegisterCustomFonts(string fontFolder)
+        {
+            if (Directory.Exists(fontFolder))
+            {
+                DirectoryInfo hdDirectoryInWhichToSearch = new DirectoryInfo(fontFolder);
+                FileInfo[] files = hdDirectoryInWhichToSearch.GetFiles();
+                foreach (var fileInfo in files)
+                {
+                    try
+                    {
+                        PdfFontFactory.Register(fileInfo.FullName);
+                    }
+                    catch (Exception e)
+                    {
+                        Debug.WriteLine(e);
+                    }
+                }
+            }
+        }
+
         public void Dispose()
         {
             _pdfDoc?.Close();
             if (!string.IsNullOrWhiteSpace(_temporaryFile))
                 if (File.Exists(_temporaryFile))
                     File.Delete(_temporaryFile);
-        } 
+        }
 
         private void Init(string targetFile, string sourceFile)
         {
