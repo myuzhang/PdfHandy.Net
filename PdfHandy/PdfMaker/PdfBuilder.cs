@@ -135,10 +135,10 @@ namespace PdfMaker
                 float aboveBaseline = pdfFont.GetAscent(stringLines[0], targetSize);
                 float underBaseline = pdfFont.GetDescent(stringLines[0], targetSize);
                 float textHeight = aboveBaseline - underBaseline;
-                float lineHeight = textHeight * 1.25f;
+                float lineHeight = textHeight * 1.5f;
                 int lineNumProvided = (int)Math.Floor(targetFieldHeight / lineHeight);
 
-                if (lineNumProvided >= lineNumRequired) break;
+                if (lineNumProvided > lineNumRequired) break;
 
                 lineNumRequired = 0;
                 targetSize = targetSize - 1;
