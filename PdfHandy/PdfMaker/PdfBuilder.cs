@@ -251,7 +251,16 @@ namespace PdfMaker
 
                         Image image = new Image(ImageDataFactory.Create(File.ReadAllBytes(value.ToString())));
                         image.ScaleToFit(width, height);
-                        image.SetFixedPosition(pageNum, (float)position.GetAsNumber(0).GetValue(), (float)position.GetAsNumber(1).GetValue());
+
+                        float startX = (float)position.GetAsNumber(0).GetValue();
+                        float startY = (float)position.GetAsNumber(1).GetValue();
+
+                        PdfFontAttribute pdfFont = property.GetCustomAttribute<PdfFontAttribute>();
+                        if (pdfFont != null)
+                            ImagePositionAdjustification(pdfFont.ImageJustification, width, height, image.GetImageScaledWidth(), image.GetImageScaledHeight(),
+                            (float)position.GetAsNumber(0).GetValue(), (float)position.GetAsNumber(1).GetValue(), out startX, out startY);
+
+                        image.SetFixedPosition(pageNum, startX, startY);
                         _form.RemoveField(field.GetFieldName().ToString());
                         _doc.Add(image);
                     }
@@ -381,6 +390,77 @@ namespace PdfMaker
             if (!string.IsNullOrWhiteSpace(_temporaryFile))
                 if (File.Exists(_temporaryFile))
                     File.Delete(_temporaryFile);
+        }
+
+        private void ImagePositionAdjustification(int adjustification, float formWidth, float formHeight, float imageWidth, float imageHeight, float formX, float formY, out float imageX, out float imageY)
+        {
+            imageX = formX;
+            imageY = formY;
+
+            if (adjustification == 0)
+            {
+                return;
+            }
+
+            float offset;
+
+            if (adjustification == 1 || adjustification == 2)
+            {
+                if (imageWidth >= formWidth)
+                {
+                    imageX = formX;
+                    imageY = formY;
+                    return;
+                }
+
+                offset = adjustification == 1 ? (formWidth - imageWidth) / 2 : formWidth - imageWidth;
+                imageX = formX + offset;
+                imageY = formY;
+                return;
+            }
+
+            if (adjustification == 3 || adjustification == 4 || adjustification == 5)
+            {
+                if (imageHeight >= formHeight)
+                {
+                    imageY = formY;
+                }
+                else
+                {
+                    offset = formHeight - imageHeight;
+                    imageY = formY + offset;
+                }
+
+                if (adjustification == 3 || imageWidth >= formWidth)
+                {
+                    imageX = formX;
+                    return;
+                }
+
+                offset = adjustification == 4 ? (formWidth - imageWidth) / 2 : formWidth - imageWidth;
+                imageX = formX + offset;
+                return;
+            }
+
+            if (imageHeight >= formHeight)
+            {
+                imageY = formY;
+            }
+            else
+            {
+                offset = (formHeight - imageHeight) / 2;
+                imageY = formY + offset;
+            }
+
+            if (imageWidth >= formWidth)
+            {
+                imageX = formX;
+            }
+            else
+            {
+                offset = (formWidth - imageWidth) / 2;
+                imageY = formY + offset;
+            }
         }
 
         private void Init(string targetFile, string sourceFile)

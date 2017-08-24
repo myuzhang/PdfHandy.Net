@@ -1,6 +1,6 @@
-﻿using System;
+﻿using iText.Kernel.Colors;
+using System;
 using System.Text.RegularExpressions;
-using iText.Kernel.Colors;
 
 namespace PdfMaker
 {
@@ -17,6 +17,7 @@ namespace PdfMaker
             _type = string.Empty;
             Size = 0;
             Justification = 0;
+            ImageJustification = 0;
             WarningCondition = string.Empty;
         }
 
@@ -26,6 +27,7 @@ namespace PdfMaker
             _type = string.Empty;
             Size = 0;
             Justification = 0;
+            ImageJustification = 0;
             WarningCondition = string.Empty;
         }
 
@@ -35,6 +37,7 @@ namespace PdfMaker
             _type = type;
             Size = size;
             Justification = 0;
+            ImageJustification = 0;
             WarningCondition = string.Empty;
         }
 
@@ -90,6 +93,15 @@ namespace PdfMaker
         public int Size { get; set; }
 
         public int Justification { get; set; }
+
+        //0: original point for bottom left justified - default behavior
+        //1: original point for bottom middle justified
+        //2: original point for bottom right justified
+        //3: original point for top left justified
+        //4: original point for top middle justified
+        //5: original point for top right justified
+        //6: original point for center justified
+        public int ImageJustification { get; set; }
 
         public string WarningCondition { get; set; }
 
