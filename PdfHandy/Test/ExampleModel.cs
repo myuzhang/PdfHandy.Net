@@ -6,7 +6,7 @@ namespace Test
     public class ExampleModel
     {
         [PdfAction(ActionFlag.Required)]
-        [PdfFont("Yellow", "helvetica", 18, Justification = 2)]
+        [PdfFont("Yellow", "helvetica", 18, Justification = PdfTextAlignment.TopMiddle)]
         public string Example1 { get; set; }
 
         [PdfAction(ActionFlag.Optional)]

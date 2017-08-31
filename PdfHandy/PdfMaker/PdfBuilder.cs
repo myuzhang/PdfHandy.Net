@@ -182,9 +182,28 @@ namespace PdfMaker
                                 ? PdfFontFactory.CreateRegisteredFont(pdfFont.Type)
                                 : defaultFont;
 
-                            if (pdfFont.Justification == 6)
+                            // default justification for form is from top left
+
+                            if (pdfFont.Justification == PdfTextAlignment.CenterLeft ||
+                                pdfFont.Justification == PdfTextAlignment.CenterMiddle ||
+                                pdfFont.Justification == PdfTextAlignment.CenterRight)
                             {
-                                FillAsCenterVerticalInAcroForm(toSet, detail, property.Name, font, pdfFont);
+                                VerticalJustificationInAcroForm(toSet, detail, property.Name, font, pdfFont);
+                                continue;
+                            }
+
+                            if (pdfFont.Justification == PdfTextAlignment.BottomLeft ||
+                                pdfFont.Justification == PdfTextAlignment.BottomMiddle ||
+                                pdfFont.Justification == PdfTextAlignment.BottomRight)
+                            {
+                                ;
+                            }
+
+                            if (pdfFont.Justification == PdfTextAlignment.TopLeft ||
+                                pdfFont.Justification == PdfTextAlignment.TopMiddle ||
+                                pdfFont.Justification == PdfTextAlignment.TopRight)
+                            {
+                                toSet.SetJustification((int)pdfFont.Justification);
                             }
 
                             toSet.SetFont(font);
@@ -192,7 +211,7 @@ namespace PdfMaker
                             if (pdfFont.Size == 0) toSet.SetFontSizeAutoScale();
                             else toSet.SetFontSize(pdfFont.Size);
 
-                            toSet.SetColor(pdfFont.Color).SetJustification(pdfFont.Justification);
+                            toSet.SetColor(pdfFont.Color);
 
                             if (!string.IsNullOrWhiteSpace(pdfFont.WarningCondition))
                             {
@@ -396,7 +415,7 @@ namespace PdfMaker
             }
         }
 
-        private void FillAsCenterVerticalInAcroForm<T>(PdfFormField field, T detail, string propertyName, PdfFont pdfFont, PdfFontAttribute pdfFontAttribute)
+        private void VerticalJustificationInAcroForm<T>(PdfFormField field, T detail, string propertyName, PdfFont pdfFont, PdfFontAttribute pdfFontAttribute)
         {
             var widgets = field.GetWidgets();
             if (widgets == null || widgets.Count == 0)
@@ -444,36 +463,49 @@ namespace PdfMaker
                 verticalAdjustment = (pdfFont.GetWidth(textValue, pdfFontAttribute.Size) / (urx - llx)) * pdfFont.GetAscent(textValue, pdfFontAttribute.Size);
             }
 
-            Paragraph p = new Paragraph(text).SetTextAlignment(iText.Layout.Properties.TextAlignment.CENTER);
+            Paragraph p = new Paragraph(text);
+            if (pdfFontAttribute.Justification == PdfTextAlignment.CenterLeft ||
+                pdfFontAttribute.Justification == PdfTextAlignment.BottomLeft)
+                p.SetTextAlignment(iText.Layout.Properties.TextAlignment.LEFT);
+            if (pdfFontAttribute.Justification == PdfTextAlignment.CenterMiddle ||
+                pdfFontAttribute.Justification == PdfTextAlignment.BottomMiddle)
+                p.SetTextAlignment(iText.Layout.Properties.TextAlignment.CENTER);
+            if (pdfFontAttribute.Justification == PdfTextAlignment.CenterRight ||
+                pdfFontAttribute.Justification == PdfTextAlignment.BottomRight)
+                p.SetTextAlignment(iText.Layout.Properties.TextAlignment.RIGHT);
+
+            // set line space
             p.SetMultipliedLeading(1);
 
-            new Canvas(canvas, _pdfDoc, rect)
+            if (pdfFontAttribute.Justification == PdfTextAlignment.CenterLeft ||
+                pdfFontAttribute.Justification == PdfTextAlignment.CenterMiddle ||
+                pdfFontAttribute.Justification == PdfTextAlignment.CenterRight)
+                new Canvas(canvas, _pdfDoc, rect)
                 .Add(p.SetFixedPosition(llx, (ury + lly) / 2 - verticalAdjustment, urx - llx));
+
+            if (pdfFontAttribute.Justification == PdfTextAlignment.BottomLeft ||
+                pdfFontAttribute.Justification == PdfTextAlignment.BottomMiddle ||
+                pdfFontAttribute.Justification == PdfTextAlignment.BottomRight)
+                new Canvas(canvas, _pdfDoc, rect).Add(p);
 
             _form.RemoveField(field.GetFieldName().ToString());
         }
 
-        public void Dispose()
-        {
-            _pdfDoc?.Close();
-            if (!string.IsNullOrWhiteSpace(_temporaryFile))
-                if (File.Exists(_temporaryFile))
-                    File.Delete(_temporaryFile);
-        }
-
-        private void ImagePositionAdjustification(int adjustification, float formWidth, float formHeight, float imageWidth, float imageHeight, float formX, float formY, out float imageX, out float imageY)
+        private void ImagePositionAdjustification(PdfTextAlignment adjustification, float formWidth, float formHeight, float imageWidth, float imageHeight, float formX, float formY, out float imageX, out float imageY)
         {
             imageX = formX;
             imageY = formY;
 
-            if (adjustification == 0)
+            // for bottom justification:
+
+            if (adjustification == PdfTextAlignment.BottomLeft)
             {
                 return;
             }
 
-            float offset;
+            float offset = 0;
 
-            if (adjustification == 1 || adjustification == 2)
+            if (adjustification == PdfTextAlignment.BottomMiddle || adjustification == PdfTextAlignment.BottomRight)
             {
                 if (imageWidth >= formWidth)
                 {
@@ -482,13 +514,15 @@ namespace PdfMaker
                     return;
                 }
 
-                offset = adjustification == 1 ? (formWidth - imageWidth) / 2 : formWidth - imageWidth;
+                offset = adjustification == PdfTextAlignment.BottomMiddle ? (formWidth - imageWidth) / 2 : formWidth - imageWidth;
                 imageX = formX + offset;
                 imageY = formY;
                 return;
             }
 
-            if (adjustification == 3 || adjustification == 4 || adjustification == 5)
+            // for top justification:
+
+            if (adjustification == PdfTextAlignment.TopLeft || adjustification == PdfTextAlignment.TopMiddle || adjustification == PdfTextAlignment.TopRight)
             {
                 if (imageHeight >= formHeight)
                 {
@@ -500,16 +534,18 @@ namespace PdfMaker
                     imageY = formY + offset;
                 }
 
-                if (adjustification == 3 || imageWidth >= formWidth)
+                if (adjustification == PdfTextAlignment.TopLeft || imageWidth >= formWidth)
                 {
                     imageX = formX;
                     return;
                 }
 
-                offset = adjustification == 4 ? (formWidth - imageWidth) / 2 : formWidth - imageWidth;
+                offset = adjustification == PdfTextAlignment.TopMiddle ? (formWidth - imageWidth) / 2 : formWidth - imageWidth;
                 imageX = formX + offset;
                 return;
             }
+
+            // for center justification:
 
             if (imageHeight >= formHeight)
             {
@@ -521,14 +557,23 @@ namespace PdfMaker
                 imageY = formY + offset;
             }
 
+            if (adjustification == PdfTextAlignment.CenterLeft)
+            {
+                imageX = formX;
+                return;
+            }
+
             if (imageWidth >= formWidth)
             {
                 imageX = formX;
             }
             else
             {
-                offset = (formWidth - imageWidth) / 2;
-                imageY = formY + offset;
+                if (adjustification == PdfTextAlignment.CenterMiddle)
+                    offset = (formWidth - imageWidth) / 2;
+                if (adjustification == PdfTextAlignment.CenterRight)
+                    offset = formWidth - imageWidth;
+                imageX = formX + offset;
             }
         }
 
@@ -560,6 +605,14 @@ namespace PdfMaker
             _doc = new Document(_pdfDoc);
             _form = PdfAcroForm.GetAcroForm(_pdfDoc, true);
             _u3DInfos = new List<U3DInfo>();
+        }
+
+        public void Dispose()
+        {
+            _pdfDoc?.Close();
+            if (!string.IsNullOrWhiteSpace(_temporaryFile))
+                if (File.Exists(_temporaryFile))
+                    File.Delete(_temporaryFile);
         }
     }
 }

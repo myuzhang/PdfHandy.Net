@@ -82,6 +82,7 @@
     <Compile Include="PdfActionAttribute.cs" />
     <Compile Include="PdfFontAttribute.cs" />
     <Compile Include="PdfBuilder.cs" />
+    <Compile Include="PdfTextAlignment.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="U3DImageHelper.cs" />
   </ItemGroup>
