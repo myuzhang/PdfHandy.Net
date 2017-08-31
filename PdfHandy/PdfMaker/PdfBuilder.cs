@@ -3,7 +3,9 @@ using iText.Forms.Fields;
 using iText.IO.Image;
 using iText.Kernel.Colors;
 using iText.Kernel.Font;
+using iText.Kernel.Geom;
 using iText.Kernel.Pdf;
+using iText.Kernel.Pdf.Canvas;
 using iText.Layout;
 using iText.Layout.Element;
 using PdfMaker.Models;
@@ -13,6 +15,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using Path = System.IO.Path;
 
 namespace PdfMaker
 {
@@ -175,7 +178,16 @@ namespace PdfMaker
                         PdfFontAttribute pdfFont = property.GetCustomAttribute<PdfFontAttribute>();
                         if (pdfFont != null)
                         {
-                            toSet.SetFont(pdfFont.Type != null ? PdfFontFactory.CreateRegisteredFont(pdfFont.Type) : defaultFont);
+                            var font = pdfFont.Type != null
+                                ? PdfFontFactory.CreateRegisteredFont(pdfFont.Type)
+                                : defaultFont;
+
+                            if (pdfFont.Justification == 6)
+                            {
+                                FillAsCenterVerticalInAcroForm(toSet, detail, property.Name, font, pdfFont);
+                            }
+
+                            toSet.SetFont(font);
 
                             if (pdfFont.Size == 0) toSet.SetFontSizeAutoScale();
                             else toSet.SetFontSize(pdfFont.Size);
@@ -382,6 +394,63 @@ namespace PdfMaker
                     }
                 }
             }
+        }
+
+        private void FillAsCenterVerticalInAcroForm<T>(PdfFormField field, T detail, string propertyName, PdfFont pdfFont, PdfFontAttribute pdfFontAttribute)
+        {
+            var widgets = field.GetWidgets();
+            if (widgets == null || widgets.Count == 0)
+                throw new ArgumentNullException($"no widgets to the field");
+
+            PdfArray position = widgets.First().GetRectangle();
+
+            PdfPage page = field.GetWidgets().First().GetPage();
+            if (page == null)
+                throw new ArgumentNullException(
+                    $"field widget annotation is not associated with any page");
+            int pageNum = _pdfDoc.GetPageNumber(page);
+
+            float width = (float)(position.GetAsNumber(2).GetValue() - position.GetAsNumber(0).GetValue());
+            float height = (float)(position.GetAsNumber(3).GetValue() - position.GetAsNumber(1).GetValue());
+            float llx = (float)position.GetAsNumber(0).GetValue();
+            float lly = (float)position.GetAsNumber(1).GetValue();
+            float urx = (float)position.GetAsNumber(2).GetValue();
+            float ury = (float)position.GetAsNumber(3).GetValue();
+
+            Rectangle rect = new Rectangle(llx, lly, width, height);
+
+            PdfCanvas canvas = new PdfCanvas(_pdfDoc, pageNum);
+            canvas.SetLineWidth(0f).Rectangle(rect);
+
+            string textValue = null;
+            Type type = detail.GetType();
+            PropertyInfo[] properties = type.GetProperties();
+            foreach (PropertyInfo property in properties)
+            {
+                if (property.Name == propertyName)
+                    textValue = property.GetValue(detail, null).ToString();
+            }
+            if (string.IsNullOrWhiteSpace(textValue)) return;
+
+            float verticalAdjustment = 0;
+            var text = new Text(textValue);
+            if (pdfFont != null)
+            {
+                text.SetFont(pdfFont);
+                text.SetFontColor(pdfFontAttribute.Color);
+                if (pdfFontAttribute.Size != 0)
+                    text.SetFontSize(pdfFontAttribute.Size);
+
+                verticalAdjustment = (pdfFont.GetWidth(textValue, pdfFontAttribute.Size) / (urx - llx)) * pdfFont.GetAscent(textValue, pdfFontAttribute.Size);
+            }
+
+            Paragraph p = new Paragraph(text).SetTextAlignment(iText.Layout.Properties.TextAlignment.CENTER);
+            p.SetMultipliedLeading(1);
+
+            new Canvas(canvas, _pdfDoc, rect)
+                .Add(p.SetFixedPosition(llx, (ury + lly) / 2 - verticalAdjustment, urx - llx));
+
+            _form.RemoveField(field.GetFieldName().ToString());
         }
 
         public void Dispose()

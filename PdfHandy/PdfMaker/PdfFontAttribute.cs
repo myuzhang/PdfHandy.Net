@@ -92,6 +92,10 @@ namespace PdfMaker
 
         public int Size { get; set; }
 
+        //0: original point for bottom left justified - default behavior
+        //1: original point for bottom middle justified
+        //2: original point for bottom right justified
+        //6: original point for center justified
         public int Justification { get; set; }
 
         //0: original point for bottom left justified - default behavior
