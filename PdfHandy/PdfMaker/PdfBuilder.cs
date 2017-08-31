@@ -150,7 +150,7 @@ namespace PdfMaker
             return targetSize;
         }
 
-        public void FillFieldInAcroForm<T>(T detail)
+        public void FillTextInAcroForm<T>(T detail)
         {
             IDictionary<String, PdfFormField> fields = _form.GetFormFields();
 
@@ -182,21 +182,27 @@ namespace PdfMaker
                                 ? PdfFontFactory.CreateRegisteredFont(pdfFont.Type)
                                 : defaultFont;
 
+                            if (pdfFont.IsAutoScaleToBlock)
+                            {
+                                PdfArray position = toSet.GetWidgets().First().GetRectangle();
+                                float width = (float)(position.GetAsNumber(2).GetValue() - position.GetAsNumber(0).GetValue());
+                                float height = (float)(position.GetAsNumber(3).GetValue() - position.GetAsNumber(1).GetValue());
+
+                                pdfFont.Size =
+                                GetFontSizeFittingMultiLinesInAcroForm(value.ToString(), width, height, font, pdfFont.Size != 0 ? pdfFont.Size : 12);
+                            }
+
                             // default justification for form is from top left
 
                             if (pdfFont.Justification == PdfTextAlignment.CenterLeft ||
                                 pdfFont.Justification == PdfTextAlignment.CenterMiddle ||
-                                pdfFont.Justification == PdfTextAlignment.CenterRight)
-                            {
-                                VerticalJustificationInAcroForm(toSet, detail, property.Name, font, pdfFont);
-                                continue;
-                            }
-
-                            if (pdfFont.Justification == PdfTextAlignment.BottomLeft ||
+                                pdfFont.Justification == PdfTextAlignment.CenterRight ||
+                                pdfFont.Justification == PdfTextAlignment.BottomLeft ||
                                 pdfFont.Justification == PdfTextAlignment.BottomMiddle ||
                                 pdfFont.Justification == PdfTextAlignment.BottomRight)
                             {
-                                ;
+                                VerticalJustificationInAcroForm(toSet, detail, property.Name, font, pdfFont);
+                                continue;
                             }
 
                             if (pdfFont.Justification == PdfTextAlignment.TopLeft ||
