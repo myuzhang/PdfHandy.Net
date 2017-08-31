@@ -17,7 +17,7 @@ namespace PdfMaker
             _type = string.Empty;
             Size = 0;
             Justification = 0;
-            ImageJustification = 0;
+            IsAutoScaleToBlock = false;
             WarningCondition = string.Empty;
         }
 
@@ -27,7 +27,7 @@ namespace PdfMaker
             _type = string.Empty;
             Size = 0;
             Justification = 0;
-            ImageJustification = 0;
+            IsAutoScaleToBlock = false;
             WarningCondition = string.Empty;
         }
 
@@ -37,7 +37,7 @@ namespace PdfMaker
             _type = type;
             Size = size;
             Justification = 0;
-            ImageJustification = 0;
+            IsAutoScaleToBlock = false;
             WarningCondition = string.Empty;
         }
 
@@ -92,24 +92,9 @@ namespace PdfMaker
 
         public int Size { get; set; }
 
-        //0: original point for left justified - default behavior
-        //1: original point for middle justified
-        //2: original point for right justified
-        //6: original point for center left justified
-        //7: original point for center middle justified
-        //8: original point for center right justified
         public PdfTextAlignment Justification { get; set; }
 
-        //0: original point for bottom left justified - default behavior
-        //1: original point for bottom middle justified
-        //2: original point for bottom right justified
-        //3: original point for top left justified
-        //4: original point for top middle justified
-        //5: original point for top right justified
-        //6: original point for center left justified
-        //7: original point for center middle justified
-        //8: original point for center right justified
-        public PdfTextAlignment ImageJustification { get; set; }
+        public bool IsAutoScaleToBlock { get; set; }
 
         public string WarningCondition { get; set; }
 

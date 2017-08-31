@@ -288,7 +288,7 @@ namespace PdfMaker
 
                         PdfFontAttribute pdfFont = property.GetCustomAttribute<PdfFontAttribute>();
                         if (pdfFont != null)
-                            ImagePositionAdjustification(pdfFont.ImageJustification, width, height, image.GetImageScaledWidth(), image.GetImageScaledHeight(),
+                            ImagePositionAdjustification(pdfFont.Justification, width, height, image.GetImageScaledWidth(), image.GetImageScaledHeight(),
                             (float)position.GetAsNumber(0).GetValue(), (float)position.GetAsNumber(1).GetValue(), out startX, out startY);
 
                         image.SetFixedPosition(pageNum, startX, startY);
